@@ -4,38 +4,72 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-# --- ページ設定 ---
-st.set_page_config(page_title="ScoutLab Pro", layout="wide")
-
-# --- 共通関数：サッカーコートの描画 ---
-def draw_pitch(ax):
-    # 背景色と線の色
-    pitch_color = "#1a472a"
+def create_pitch_from_csv_coords():
+    """
+    CSVデータの座標系 (-52.5 to 52.5, -34 to 34) に合わせたコートを作成
+    """
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    # 背景色（芝生）
+    ax.set_facecolor('#2e7d32')
+    
+    # --- 基本設定 ---
+    # フィールドサイズ (データ基準: 横105m / 縦68m)
+    x_max, y_max = 52.5, 34
     line_color = "white"
-    ax.set_facecolor(pitch_color)
     
-    # ピッチ外枠 (横105m: -52.5 to 52.5, 縦68m: -34 to 34)
-    ax.plot([-52.5, 52.5, 52.5, -52.5, -52.5], [-34, -34, 34, 34, -34], color=line_color, lw=2)
-    # センターライン
-    ax.axvline(0, color=line_color, lw=2)
-    # センターサークル
-    center_circle = patches.Circle((0, 0), 9.15, color=line_color, fill=False, lw=2)
+    # 1. 外枠 (タッチライン・ゴールライン)
+    ax.plot([-x_max, x_max, x_max, -x_max, -x_max], 
+            [-y_max, -y_max, y_max, y_max, -y_max], color=line_color, lw=2, zorder=1)
+    
+    # 2. センターライン
+    ax.axvline(0, color=line_color, lw=2, zorder=1)
+    
+    # 3. センターサークル (半径9.15m)
+    center_circle = patches.Circle((0, 0), 9.15, color=line_color, fill=False, lw=2, zorder=1)
     ax.add_patch(center_circle)
+    # センタースポット
+    ax.scatter(0, 0, color=line_color, s=20, zorder=1)
     
-    # ペナルティエリア (右)
-    ax.plot([36, 52.5, 52.5, 36, 36], [-20.15, -20.15, 20.15, 20.15, -20.15], color=line_color, lw=2)
-    # ペナルティエリア (左)
-    ax.plot([-36, -52.5, -52.5, -36, -36], [-20.15, -20.15, 20.15, 20.15, -20.15], color=line_color, lw=2)
+    # 4. ペナルティエリア (16.5m × 40.3m)
+    # 右側
+    ax.plot([x_max - 16.5, x_max, x_max, x_max - 16.5, x_max - 16.5], 
+            [-20.15, -20.15, 20.15, 20.15, -20.15], color=line_color, lw=2, zorder=1)
+    # 左側
+    ax.plot([-x_max + 16.5, -x_max, -x_max, -x_max + 16.5, -x_max + 16.5], 
+            [-20.15, -20.15, 20.15, 20.15, -20.15], color=line_color, lw=2, zorder=1)
     
-    # ゴール位置の強調（赤線）
-    ax.plot([52.5, 53.5, 53.5, 52.5], [-3.66, -3.66, 3.66, 3.66], color="red", lw=3)
-    ax.plot([-52.5, -53.5, -53.5, -52.5], [-3.66, -3.66, 3.66, 3.66], color="red", lw=3)
+    # 5. ゴールエリア (5.5m × 18.3m)
+    # 右側
+    ax.plot([x_max - 5.5, x_max, x_max, x_max - 5.5, x_max - 5.5], 
+            [-9.15, -9.15, 9.15, 9.15, -9.15], color=line_color, lw=2, zorder=1)
+    # 左側
+    ax.plot([-x_max + 5.5, -x_max, -x_max, -x_max + 5.5, -x_max + 5.5], 
+            [-9.15, -9.15, 9.15, 9.15, -9.15], color=line_color, lw=2, zorder=1)
+    
+    # 6. ペナルティアーク (半径9.15m)
+    # 右側 (中心点: ゴールから11m地点)
+    arc_right = patches.Arc((x_max - 11, 0), 18.3, 18.3, theta1=128, theta2=232, color=line_color, lw=2, zorder=1)
+    ax.add_patch(arc_right)
+    # 左側
+    arc_left = patches.Arc((-x_max + 11, 0), 18.3, 18.3, theta1=308, theta2=52, color=line_color, lw=2, zorder=1)
+    ax.add_patch(arc_left)
 
-    # 表示範囲の設定
-    ax.set_xlim(-58, 58)
-    ax.set_ylim(-38, 38)
-    ax.set_aspect('equal') # アスペクト比を固定してコートを正しく表示
-    ax.axis('off')
+    # 7. ゴールポスト（赤線で強調）
+    ax.plot([x_max, x_max+1], [-3.66, -3.66], color="red", lw=2)
+    ax.plot([x_max, x_max+1], [3.66, 3.66], color="red", lw=2)
+    ax.plot([x_max+1, x_max+1], [-3.66, 3.66], color="red", lw=2)
+
+    # 表示範囲の調整
+    ax.set_xlim(-60, 60)
+    ax.set_ylim(-40, 40)
+    ax.axis('off') # 軸と枠線を隠す
+    
+    return fig, ax
+
+# 実行例
+fig, ax = create_pitch_from_csv_coords()
+plt.show()
 
 # --- サイドバーメニュー ---
 st.sidebar.title("⚽ ScoutLab Pro")
