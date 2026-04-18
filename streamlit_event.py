@@ -110,34 +110,3 @@ if menu == "試合分析":
 elif menu == "リーグ分析 (100year J2J3)":
     st.header("🏆 League Analysis")
     st.write("準備中...")
-
-
-pip install statsbombpy mplsoccer
-from statsbombpy import sb
-from mplsoccer import Pitch
-import matplotlib.pyplot as plt
-
-# 1. 無料公開されている試合一覧から「2022 W杯決勝」のIDを取得
-# 43はW杯のcompetition_id、106は2022年のseason_idです
-df_events = sb.events(match_id=3869685)
-
-# 2. アルゼンチンのシュートデータだけを抽出
-team_name = 'Argentina'
-shots = df_events[(df_events.type == 'Shot') & (df_events.team == team_name)].copy()
-
-# 3. 座標データ (location) を x と y に分ける
-shots[['x', 'y']] = shots['location'].apply(pd.Series)
-
-# 4. ピッチの描画
-pitch = Pitch(pitch_type='statsbomb', pitch_color='#22312b', line_color='#c7d5cc')
-fig, ax = pitch.draw(figsize=(13, 8))
-
-# 5. シュートをプロット（ゴールは大きく、それ以外は小さく）
-for i, row in shots.iterrows():
-    if row.shot_outcome == 'Goal':
-        pitch.scatter(row.x, row.y, s=300, edgecolors='black', c='#ad993c', marker='*', ax=ax, label='Goal')
-    else:
-        pitch.scatter(row.x, row.y, s=100, edgecolors='white', c='#ea6969', alpha=0.7, ax=ax)
-
-plt.title(f'{team_name} Shot Map (WC 2022 Final)', fontsize=20, color='white')
-plt.show()
